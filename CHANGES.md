@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Responsive UI components and layout system
 - Deployment configurations for Vercel, Render, and Supabase
 - Comprehensive documentation and setup guides
+- **Podcast Application Features:**
+  - Episode management with transcript processing
+  - AI-powered content extraction using OpenAI API
+  - YouTube/Spotify transcript fetching
+  - Business ideas, frameworks, insights, and founder stories extraction
+  - Episode cards with search and filtering
+  - Detailed episode pages with all extracted content
+  - Processing status tracking for episodes
+- **Testing Infrastructure:**
+  - Jest + Supertest for backend API testing
+  - React Testing Library + Vitest for frontend testing
+  - Comprehensive test coverage for components and API endpoints
 
 ### Changed
 - N/A

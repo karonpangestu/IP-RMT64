@@ -1,16 +1,16 @@
-import { Link } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import { selectIsAuthenticated } from '../store/slices/authSlice'
-import { 
-  Shield, 
-  Zap, 
-  Database, 
-  Smartphone, 
-  Code, 
+import { Link } from "react-router-dom"
+import { useSelector } from "react-redux"
+import { selectIsAuthenticated } from "../store/slices/authSlice"
+import {
+  Shield,
+  Zap,
+  Database,
+  Smartphone,
+  Code,
   Globe,
   ArrowRight,
-  CheckCircle
-} from 'lucide-react'
+  CheckCircle,
+} from "lucide-react"
 
 const Home = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated)
@@ -18,43 +18,49 @@ const Home = () => {
   const features = [
     {
       icon: Shield,
-      title: 'Secure Authentication',
-      description: 'JWT-based authentication with bcrypt password hashing and role-based access control.'
+      title: "Secure Authentication",
+      description:
+        "JWT-based authentication with bcrypt password hashing and role-based access control.",
     },
     {
       icon: Database,
-      title: 'PostgreSQL Database',
-      description: 'Robust database with Sequelize ORM for efficient data management and relationships.'
+      title: "PostgreSQL Database",
+      description:
+        "Robust database with Sequelize ORM for efficient data management and relationships.",
     },
     {
       icon: Zap,
-      title: 'Fast & Responsive',
-      description: 'Built with Vite and React for lightning-fast development and optimal performance.'
+      title: "Fast & Responsive",
+      description:
+        "Built with Vite and React for lightning-fast development and optimal performance.",
     },
     {
       icon: Smartphone,
-      title: 'Mobile First',
-      description: 'Responsive design that works perfectly on all devices and screen sizes.'
+      title: "Mobile First",
+      description:
+        "Responsive design that works perfectly on all devices and screen sizes.",
     },
     {
       icon: Code,
-      title: 'Modern Stack',
-      description: 'Latest technologies including Node.js, Express, Redux Toolkit, and TailwindCSS.'
+      title: "Modern Stack",
+      description:
+        "Latest technologies including Node.js, Express, Redux Toolkit, and TailwindCSS.",
     },
     {
       icon: Globe,
-      title: 'Cloud Ready',
-      description: 'Deployment configurations for Vercel, Render, and Supabase cloud services.'
-    }
+      title: "Cloud Ready",
+      description:
+        "Deployment configurations for Vercel, Render, and Supabase cloud services.",
+    },
   ]
 
   const techStack = [
-    'Node.js & Express.js',
-    'PostgreSQL & Sequelize',
-    'React 18 & Vite',
-    'Redux Toolkit',
-    'TailwindCSS',
-    'JWT Authentication'
+    "Node.js & Express.js",
+    "PostgreSQL & Sequelize",
+    "React 18 & Vite",
+    "Redux Toolkit",
+    "TailwindCSS",
+    "JWT Authentication",
   ]
 
   return (
@@ -67,8 +73,9 @@ const Home = () => {
             <span className="text-primary-600 block">Web Application</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            A modern, scalable web application built with cutting-edge technologies. 
-            Features user authentication, profile management, and a beautiful responsive interface.
+            A modern, scalable web application built with cutting-edge
+            technologies. Features user authentication, profile management, and
+            a beautiful responsive interface.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {!isAuthenticated ? (
@@ -108,13 +115,17 @@ const Home = () => {
               Powerful Features
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Everything you need to build and deploy a production-ready web application
+              Everything you need to build and deploy a production-ready web
+              application
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="bg-gray-50 p-6 rounded-xl hover:shadow-lg transition-shadow">
+              <div
+                key={index}
+                className="bg-gray-50 p-6 rounded-xl hover:shadow-lg transition-shadow"
+              >
                 <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary-600" />
                 </div>
@@ -138,13 +149,17 @@ const Home = () => {
               Technology Stack
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Built with modern, battle-tested technologies for optimal performance and developer experience
+              Built with modern, battle-tested technologies for optimal
+              performance and developer experience
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {techStack.map((tech, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition-shadow">
+              <div
+                key={index}
+                className="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition-shadow"
+              >
                 <CheckCircle className="w-8 h-8 text-primary-600 mx-auto mb-2" />
                 <p className="text-sm font-medium text-gray-700">{tech}</p>
               </div>
@@ -160,7 +175,8 @@ const Home = () => {
             Ready to Get Started?
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of developers building amazing applications with our modern tech stack
+            Join thousands of developers building amazing applications with our
+            modern tech stack
           </p>
           {!isAuthenticated ? (
             <Link

@@ -11,6 +11,8 @@ import LoadingSpinner from './components/UI/LoadingSpinner'
 
 // Pages
 import Home from './pages/Home'
+import PodcastHome from './pages/PodcastHome'
+import EpisodeDetail from './pages/EpisodeDetail'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import Dashboard from './pages/Dashboard'
@@ -40,28 +42,30 @@ function App() {
 
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path="login" element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
-        } />
-        <Route path="register" element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
-        } />
-        
-        {/* Protected routes */}
-        <Route path="dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="profile" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
-      </Route>
+              {/* Public routes */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="podcasts" element={<PodcastHome />} />
+          <Route path="episode/:id" element={<EpisodeDetail />} />
+          <Route path="login" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          } />
+          <Route path="register" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
+          } />
+          
+          {/* Protected routes */}
+          <Route path="dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+        </Route>
 
       {/* 404 route */}
       <Route path="*" element={<NotFound />} />

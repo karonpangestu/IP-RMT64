@@ -8,6 +8,7 @@ require('dotenv').config();
 const { sequelize } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
+const episodeRoutes = require('./routes/episodes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/episodes', episodeRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
