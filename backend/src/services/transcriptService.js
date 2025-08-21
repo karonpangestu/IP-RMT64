@@ -1,244 +1,73 @@
-const axios = require('axios');
-const { YoutubeTranscript } = require('youtube-transcript-api');
-const cheerio = require('cheerio');
-const OpenAI = require('openai');
+const { fetchTranscript, InMemoryCache } = require("youtube-transcript-plus")
 
 class TranscriptService {
-  constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+  static cache = new InMemoryCache(1800000) // 30 minutes cache
+
+  static decodeHtmlEntities(text) {
+    return text
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ") // normalize whitespace
+      .trim()
   }
 
-  // Extract video ID from YouTube URL
-  extractYouTubeId(url) {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-  }
-
-  // Extract episode ID from Spotify URL
-  extractSpotifyId(url) {
-    const regex = /spotify\.com\/episode\/([a-zA-Z0-9]+)/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-  }
-
-  // Fetch transcript from YouTube
-  async fetchYouTubeTranscript(url) {
+  static async getTranscript(youtubeUrl) {
     try {
-      const videoId = this.extractYouTubeId(url);
-      if (!videoId) {
-        throw new Error('Invalid YouTube URL');
-      }
+      console.log("📺 Fetching transcript for URL:", youtubeUrl)
 
-      const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-      
-      // Combine all transcript parts into one text
+      const transcript = await fetchTranscript(youtubeUrl, {
+        lang: "en",
+        cache: this.cache,
+        userAgent:
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      })
+
+      console.log("📝 Raw transcript data:", transcript)
+
+      // Combine all transcript parts into a single text with timestamps
       const fullTranscript = transcript
-        .map(part => part.text)
-        .join(' ');
+        .map((part) => {
+          const minutes = Math.floor(part.offset / 60)
+          const seconds = Math.floor(part.offset % 60)
+          const timestamp = `[${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}]`
+          return `${timestamp} ${this.decodeHtmlEntities(part.text)}`
+        })
+        .join("\n")
 
-      return {
-        transcript: fullTranscript,
-        sourceType: 'youtube',
-        videoId: videoId
-      };
-    } catch (error) {
-      console.error('Error fetching YouTube transcript:', error);
-      throw new Error(`Failed to fetch YouTube transcript: ${error.message}`);
-    }
-  }
-
-  // Fetch transcript from Spotify (placeholder - would need Spotify API)
-  async fetchSpotifyTranscript(url) {
-    try {
-      const episodeId = this.extractSpotifyId(url);
-      if (!episodeId) {
-        throw new Error('Invalid Spotify URL');
+      if (!fullTranscript) {
+        throw new Error("No transcript content found")
       }
 
-      // Note: Spotify doesn't provide transcripts via public API
-      // This would require Spotify API integration or manual transcript upload
-      throw new Error('Spotify transcripts require API integration or manual upload');
+      return fullTranscript
     } catch (error) {
-      console.error('Error fetching Spotify transcript:', error);
-      throw new Error(`Failed to fetch Spotify transcript: ${error.message}`);
-    }
-  }
+      console.error("Transcript error details:", error)
 
-  // Fetch transcript based on source type
-  async fetchTranscript(url, sourceType = 'youtube') {
-    switch (sourceType.toLowerCase()) {
-      case 'youtube':
-        return await this.fetchYouTubeTranscript(url);
-      case 'spotify':
-        return await this.fetchSpotifyTranscript(url);
-      default:
-        throw new Error(`Unsupported source type: ${sourceType}`);
-    }
-  }
-
-  // Process transcript with OpenAI to extract structured data
-  async processTranscriptWithAI(transcript) {
-    try {
-      const prompt = `
-        Analyze the following podcast transcript and extract structured information in JSON format:
-
-        Transcript:
-        ${transcript}
-
-        Please provide a JSON response with the following structure:
-        {
-          "transcriptSummary": "A concise 2-3 sentence summary of the main topics discussed",
-          "businessIdeas": [
-            {
-              "title": "Idea title",
-              "description": "Brief description of the business idea",
-              "potential": "High/Medium/Low",
-              "category": "e.g., SaaS, E-commerce, Service Business"
-            }
-          ],
-          "frameworks": [
-            {
-              "name": "Framework name",
-              "description": "Brief description of the framework",
-              "application": "How to apply this framework"
-            }
-          ],
-          "timelessInsights": [
-            {
-              "insight": "The timeless business insight",
-              "explanation": "Why this insight is valuable",
-              "examples": "Real-world examples mentioned"
-            }
-          ],
-          "founderStories": [
-            {
-              "founder": "Founder name or company",
-              "story": "Key part of their founder story",
-              "lesson": "Business lesson learned",
-              "outcome": "Result or current status"
-            }
-          ]
-        }
-
-        Focus on actionable business insights, practical frameworks, and inspiring founder stories. Make the content valuable for entrepreneurs and business professionals.
-      `;
-
-      const completion = await this.openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a business analyst expert at extracting valuable insights from podcast transcripts. Provide structured, actionable information in valid JSON format.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 4000,
-        temperature: 0.3,
-      });
-
-      const response = completion.choices[0].message.content;
-      
-      // Try to parse the JSON response
-      try {
-        const parsedResponse = JSON.parse(response);
-        return parsedResponse;
-      } catch (parseError) {
-        console.error('Error parsing OpenAI response:', parseError);
-        // Fallback: return basic structure if JSON parsing fails
-        return {
-          transcriptSummary: "AI processing completed but response format was invalid",
-          businessIdeas: [],
-          frameworks: [],
-          timelessInsights: [],
-          founderStories: []
-        };
+      // Handle specific error types
+      if (error.name === "YoutubeTranscriptVideoUnavailableError") {
+        throw new Error("Video is unavailable or has been removed")
       }
-    } catch (error) {
-      console.error('Error processing transcript with AI:', error);
-      throw new Error(`AI processing failed: ${error.message}`);
-    }
-  }
-
-  // Get video metadata from YouTube
-  async getYouTubeMetadata(url) {
-    try {
-      const videoId = this.extractYouTubeId(url);
-      if (!videoId) {
-        throw new Error('Invalid YouTube URL');
+      if (error.name === "YoutubeTranscriptDisabledError") {
+        throw new Error("Transcripts are disabled for this video")
+      }
+      if (error.name === "YoutubeTranscriptNotAvailableError") {
+        throw new Error("No transcript is available for this video")
+      }
+      if (error.name === "YoutubeTranscriptNotAvailableLanguageError") {
+        throw new Error("Transcript is not available in English")
+      }
+      if (error.name === "YoutubeTranscriptInvalidVideoIdError") {
+        throw new Error("Invalid YouTube video URL")
       }
 
-      // Fetch video page to extract metadata
-      const response = await axios.get(`https://www.youtube.com/watch?v=${videoId}`);
-      const $ = cheerio.load(response.data);
-
-      // Extract title
-      const title = $('meta[property="og:title"]').attr('content') || 
-                   $('title').text().replace(' - YouTube', '');
-
-      // Extract description
-      const description = $('meta[property="og:description"]').attr('content') || 
-                        $('meta[name="description"]').attr('content');
-
-      // Extract thumbnail
-      const thumbnail = $('meta[property="og:image"]').attr('content');
-
-      // Extract duration (this is more complex and may require additional API calls)
-      const duration = null; // Would need YouTube Data API for accurate duration
-
-      return {
-        title: title || 'Unknown Title',
-        description: description || '',
-        thumbnail: thumbnail || '',
-        duration: duration,
-        publishedAt: new Date() // Would need YouTube Data API for actual publish date
-      };
-    } catch (error) {
-      console.error('Error fetching YouTube metadata:', error);
-      return {
-        title: 'Unknown Title',
-        description: '',
-        thumbnail: '',
-        duration: null,
-        publishedAt: new Date()
-      };
-    }
-  }
-
-  // Complete transcript processing pipeline
-  async processEpisode(url, sourceType = 'youtube') {
-    try {
-      // Step 1: Fetch transcript
-      const transcriptData = await this.fetchTranscript(url, sourceType);
-      
-      // Step 2: Get metadata
-      let metadata = {};
-      if (sourceType === 'youtube') {
-        metadata = await this.getYouTubeMetadata(url);
-      }
-
-      // Step 3: Process with AI
-      const aiProcessedData = await this.processTranscriptWithAI(transcriptData.transcript);
-
-      return {
-        transcript: transcriptData.transcript,
-        transcriptSummary: aiProcessedData.transcriptSummary,
-        businessIdeas: aiProcessedData.businessIdeas || [],
-        frameworks: aiProcessedData.frameworks || [],
-        timelessInsights: aiProcessedData.timelessInsights || [],
-        founderStories: aiProcessedData.founderStories || [],
-        metadata: metadata
-      };
-    } catch (error) {
-      console.error('Error in complete transcript processing:', error);
-      throw error;
+      throw new Error(`Failed to fetch transcript: ${error.message}`)
     }
   }
 }
 
-module.exports = new TranscriptService();
+module.exports = TranscriptService

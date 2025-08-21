@@ -1,96 +1,82 @@
-import axios from 'axios'
+import axios from "axios"
 
-// Create axios instance with base configuration
-const api = axios.create({
-  baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+const API_URL = "/api/auth"
+
+// Add auth token to requests
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token")
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
 })
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
+export const register = async (userData) => {
+  const response = await axios.post(`${API_URL}/register`, userData)
+  if (response.data.token) {
+    localStorage.setItem("token", response.data.token)
   }
-)
+  return response.data
+}
 
-// Response interceptor to handle common errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid, clear it
-      localStorage.removeItem('token')
-      // Redirect to login if not already there
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
-      }
-    }
-    return Promise.reject(error)
+export const login = async (credentials) => {
+  const response = await axios.post(`${API_URL}/login`, credentials)
+  if (response.data.token) {
+    localStorage.setItem("token", response.data.token)
   }
-)
+  return response.data
+}
 
-// Auth API methods
-export const authAPI = {
-  // Register a new user
-  register: async (userData) => {
-    return await api.post('/auth/register', userData)
-  },
+export const loginWithGoogle = async (token) => {
+  const response = await axios.post(`${API_URL}/google`, { token })
+  if (response.data.token) {
+    localStorage.setItem("token", response.data.token)
+  }
+  return response.data
+}
 
-  // Login user
-  login: async (credentials) => {
-    return await api.post('/auth/login', credentials)
-  },
+export const verifyToken = async (token) => {
+  const response = await axios.post(`${API_URL}/verify`, { token })
+  return response.data
+}
 
-  // Get current user profile
-  getProfile: async (token) => {
-    return await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${token}` }
+export const logout = () => {
+  localStorage.removeItem("token")
+}
+
+// Initialize Google OAuth
+export const initializeGoogleAuth = () => {
+  return new Promise((resolve) => {
+    window.gapi.load("auth2", () => {
+      window.gapi.auth2
+        .init({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        })
+        .then(resolve)
     })
-  },
+  })
+}
 
-  // Update user profile
-  updateProfile: async (profileData, token) => {
-    return await api.put('/auth/profile', profileData, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-  },
+// Get Google Auth instance
+export const getGoogleAuth = () => {
+  return window.gapi.auth2.getAuthInstance()
+}
 
-  // Health check
-  healthCheck: async () => {
-    return await api.get('/health')
+// Sign in with Google
+export const signInWithGoogle = async () => {
+  try {
+    const googleAuth = getGoogleAuth()
+    const googleUser = await googleAuth.signIn()
+    const token = googleUser.getAuthResponse().id_token
+    return await loginWithGoogle(token)
+  } catch (error) {
+    throw error
   }
 }
 
-// Users API methods
-export const usersAPI = {
-  // Get all users (admin only)
-  getAllUsers: async (params = {}) => {
-    return await api.get('/users', { params })
-  },
-
-  // Get user by ID
-  getUserById: async (id) => {
-    return await api.get(`/users/${id}`)
-  },
-
-  // Update user by ID
-  updateUser: async (id, userData) => {
-    return await api.put(`/users/${id}`, userData)
-  },
-
-  // Delete user by ID (admin only)
-  deleteUser: async (id) => {
-    return await api.delete(`/users/${id}`)
-  }
+// Sign out
+export const signOut = async () => {
+  const googleAuth = getGoogleAuth()
+  await googleAuth.signOut()
+  logout()
 }
-
-export default api

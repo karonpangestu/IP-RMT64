@@ -1,22 +1,13 @@
-import { Outlet } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice'
-import Header from './Header'
-import Footer from './Footer'
+import { Outlet } from "react-router-dom"
+import Navbar from "./Navbar"
 
-const Layout = () => {
-  const isAuthenticated = useSelector(selectIsAuthenticated)
-  const user = useSelector(selectUser)
-
+function Layout() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header isAuthenticated={isAuthenticated} user={user} />
-      
-      <main className="flex-1">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
         <Outlet />
       </main>
-      
-      <Footer />
     </div>
   )
 }

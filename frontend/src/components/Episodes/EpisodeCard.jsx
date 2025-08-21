@@ -1,205 +1,128 @@
-import { Link } from 'react-router-dom'
-import { 
-  Play, 
-  Clock, 
-  Eye, 
-  Lightbulb, 
-  Target, 
-  BookOpen, 
-  Users,
-  Calendar
-} from 'lucide-react'
+import { Link } from "react-router-dom"
+import { formatDistanceToNow } from "date-fns"
+import ReactPlayer from "react-player"
+import { useState } from "react"
 
-const EpisodeCard = ({ episode }) => {
-  const {
-    id,
-    title,
-    description,
-    thumbnail,
-    sourceUrl,
-    sourceType,
-    formattedDuration,
-    excerpt,
-    transcriptSummary,
-    businessIdeasCount,
-    frameworksCount,
-    insightsCount,
-    storiesCount,
-    tags = [],
-    category,
-    viewCount,
-    publishedAt,
-    createdAt
-  } = episode
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
-  // Get source icon and color
-  const getSourceInfo = (type) => {
-    switch (type) {
-      case 'youtube':
-        return { color: 'bg-red-500', label: 'YouTube' }
-      case 'spotify':
-        return { color: 'bg-green-500', label: 'Spotify' }
-      case 'apple':
-        return { color: 'bg-black', label: 'Apple' }
-      default:
-        return { color: 'bg-gray-500', label: 'Other' }
+// Helper function to extract YouTube video ID from URL
+const getYouTubeVideoId = (url) => {
+  try {
+    const urlObj = new URL(url)
+    if (urlObj.hostname.includes("youtube.com")) {
+      return urlObj.searchParams.get("v")
+    } else if (urlObj.hostname.includes("youtu.be")) {
+      return urlObj.pathname.slice(1)
     }
+  } catch (e) {
+    console.error("Invalid URL:", url)
   }
+  return ""
+}
 
-  const sourceInfo = getSourceInfo(sourceType)
+function EpisodeCard({ episode }) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const videoId = getYouTubeVideoId(episode.sourceUrl)
+
+  const handleVideoClick = (e) => {
+    e.preventDefault()
+    setIsPlaying(true)
+  }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-200">
-      {/* Thumbnail */}
-      <div className="relative aspect-video bg-gray-200 overflow-hidden">
-        {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt={title}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
-            <Play className="w-12 h-12 text-primary-600" />
-          </div>
-        )}
-        
-        {/* Source Badge */}
-        <div className="absolute top-3 left-3">
-          <span className={`${sourceInfo.color} text-white text-xs px-2 py-1 rounded-full font-medium`}>
-            {sourceInfo.label}
-          </span>
+    <Link
+      to={`/episode/${episode.id}`}
+      className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6"
+    >
+      <div className="flex items-start gap-4">
+        {/* Video/Thumbnail Container */}
+        <div className="w-32 h-20 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden relative group">
+          {isPlaying ? (
+            <div className="absolute inset-0">
+              <ReactPlayer
+                url={episode.sourceUrl}
+                width="100%"
+                height="100%"
+                playing={true}
+                controls={true}
+                onClick={(e) => e.preventDefault()}
+              />
+            </div>
+          ) : (
+            <>
+              <img
+                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                alt={episode.title}
+                className="w-full h-full object-cover rounded-lg"
+                onClick={handleVideoClick}
+              />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-30">
+                <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-4 h-4 text-white ml-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-        
-        {/* Duration */}
-        {formattedDuration && (
-          <div className="absolute bottom-3 right-3 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-            {formattedDuration}
-          </div>
-        )}
-      </div>
 
-      {/* Content */}
-      <div className="p-6">
-        {/* Title */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-primary-600 transition-colors">
-          <Link to={`/episode/${id}`}>
-            {title}
-          </Link>
-        </h3>
-
-        {/* Description */}
-        {excerpt && (
-          <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-            {excerpt}
+        {/* Content */}
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {episode.title}
+          </h2>
+          <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+            {episode.description}
           </p>
-        )}
 
-        {/* Transcript Summary */}
-        {transcriptSummary && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-gray-700 text-sm line-clamp-2">
-              {transcriptSummary}
-            </p>
-          </div>
-        )}
-
-        {/* Insights Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {businessIdeasCount > 0 && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Lightbulb className="w-4 h-4 text-yellow-500" />
-              <span>{businessIdeasCount} ideas</span>
-            </div>
-          )}
-          
-          {frameworksCount > 0 && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Target className="w-4 h-4 text-blue-500" />
-              <span>{frameworksCount} frameworks</span>
-            </div>
-          )}
-          
-          {insightsCount > 0 && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <BookOpen className="w-4 h-4 text-green-500" />
-              <span>{insightsCount} insights</span>
-            </div>
-          )}
-          
-          {storiesCount > 0 && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Users className="w-4 h-4 text-purple-500" />
-              <span>{storiesCount} stories</span>
-            </div>
-          )}
-        </div>
-
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {tags.slice(0, 3).map((tag, index) => (
-              <span
-                key={index}
-                className="bg-primary-100 text-primary-700 text-xs px-2 py-1 rounded-full"
+          {/* Meta info */}
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center gap-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {tag}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>
+                {formatDistanceToNow(new Date(episode.createdAt), {
+                  addSuffix: true,
+                })}
               </span>
-            ))}
-            {tags.length > 3 && (
-              <span className="text-gray-500 text-xs px-2 py-1">
-                +{tags.length - 3} more
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Meta Information */}
-        <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-3 h-3" />
-              <span>{formatDate(publishedAt || createdAt)}</span>
             </div>
-            
-            {viewCount > 0 && (
-              <div className="flex items-center space-x-1">
-                <Eye className="w-3 h-3" />
-                <span>{viewCount}</span>
+
+            {episode.duration && (
+              <div className="flex items-center gap-1">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.536 8.464a5 5 0 010 7.072M12 18.364a7 7 0 010-12.728M8.464 15.536a5 5 0 010-7.072"
+                  />
+                </svg>
+                <span>{episode.duration}</span>
               </div>
             )}
           </div>
-
-          {/* Category */}
-          {category && (
-            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
-              {category}
-            </span>
-          )}
-        </div>
-
-        {/* Action Button */}
-        <div className="mt-4">
-          <Link
-            to={`/episode/${id}`}
-            className="w-full bg-primary-600 text-white text-center py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors font-medium"
-          >
-            View Episode
-          </Link>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
