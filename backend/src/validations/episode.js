@@ -25,7 +25,6 @@ const createEpisodeSchema = Joi.object({
   businessIdeas: Joi.string().allow("", null),
   frameworks: Joi.string().allow("", null),
   founderStories: Joi.string().allow("", null),
-  userId: Joi.string().uuid().required(),
 })
 
 module.exports = {

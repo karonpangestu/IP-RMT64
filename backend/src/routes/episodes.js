@@ -87,14 +87,15 @@ router.post(
   async (req, res, next) => {
     try {
       // Ensure the authenticated user can only create episodes for themselves
-      if (req.user.id !== req.body.userId) {
-        return res.status(403).json({ message: "Forbidden" })
-      }
+      // if (req.user.id !== req.body.userId) {
+      //   return res.status(403).json({ message: "Forbidden" })
+      // }
 
       // Create initial episode record with pending status
       const episode = await Podcast.create({
         ...req.body,
         status: "processing",
+        userId: req.user.id,
       })
 
       // Process the episode asynchronously
@@ -119,6 +120,7 @@ router.post(
         })
       } catch (error) {
         // Update episode status to failed if processing fails
+        console.log(error)
         await episode.update({
           status: "failed",
           aiAnalysis: { error: error.message },
@@ -133,6 +135,7 @@ router.post(
 
       res.status(201).json(episodeWithUser)
     } catch (error) {
+      console.log(error)
       next(error)
     }
   }

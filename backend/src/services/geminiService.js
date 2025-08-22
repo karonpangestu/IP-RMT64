@@ -32,7 +32,8 @@ Please analyze the following transcript and provide a structured response with t
 [Notable founder experiences, stories, or lessons shared]
 
 Transcript:
-${transcript}`
+${transcript}
+`
 
       console.log("🤖 Sending transcript to Gemini for analysis...")
       const response = await this.ai.models.generateContent({
@@ -75,51 +76,88 @@ ${transcript}`
   parseSections(analysis) {
     const sections = {
       summary: "",
-      businessIdeas: "",
-      frameworks: "",
-      founderStories: "",
+      businessIdeas: [],
+      frameworks: [],
+      founderStories: [],
     }
 
-    // Split the analysis into sections based on common heading patterns
     const lines = analysis.split("\n")
     let currentSection = null
+    let currentItem = {
+      title: "",
+      description: "",
+    }
 
     for (const line of lines) {
-      const lowerLine = line.toLowerCase()
+      const lowerLine = line.toLowerCase().trim()
 
+      // Handle section headers
       if (lowerLine.includes("summary") || lowerLine.includes("overview")) {
         currentSection = "summary"
         continue
-      } else if (
-        lowerLine.includes("business idea") ||
-        lowerLine.includes("key business")
-      ) {
+      } else if (lowerLine.includes("business idea")) {
         currentSection = "businessIdeas"
         continue
-      } else if (
-        lowerLine.includes("framework") ||
-        lowerLine.includes("methodolog")
-      ) {
+      } else if (lowerLine.includes("framework")) {
         currentSection = "frameworks"
         continue
-      } else if (
-        lowerLine.includes("founder") ||
-        lowerLine.includes("stor") ||
-        lowerLine.includes("experience")
-      ) {
+      } else if (lowerLine.includes("founder")) {
         currentSection = "founderStories"
         continue
       }
 
-      if (currentSection && line.trim()) {
-        sections[currentSection] += line.trim() + " "
+      // Skip empty lines
+      if (!line.trim()) continue
+
+      if (currentSection === "summary") {
+        sections.summary += line.trim() + " "
+      } else if (
+        ["businessIdeas", "frameworks", "founderStories"].includes(
+          currentSection
+        )
+      ) {
+        // Check if line starts with a bullet point or asterisk
+        if (line.trim().startsWith("-") || line.trim().startsWith("*")) {
+          // If we have a previous item with content, save it
+          if (currentItem.title || currentItem.description) {
+            sections[currentSection].push(
+              `${currentItem.title}${
+                currentItem.title && currentItem.description ? ": " : ""
+              }${currentItem.description}`.trim()
+            )
+          }
+          // Start new item
+          const content = line.replace(/^[-*]\s*/, "").trim()
+          if (content.includes(":")) {
+            const [title, ...desc] = content.split(":")
+            currentItem = {
+              title: title.trim(),
+              description: desc.join(":").trim(),
+            }
+          } else {
+            currentItem = {
+              title: "",
+              description: content,
+            }
+          }
+        } else if (currentItem) {
+          // Add to current item's description
+          currentItem.description += " " + line.trim()
+        }
       }
     }
 
-    // Clean up each section
-    Object.keys(sections).forEach((key) => {
-      sections[key] = sections[key].trim()
-    })
+    // Don't forget to push the last item if exists
+    if (currentSection && (currentItem.title || currentItem.description)) {
+      sections[currentSection].push(
+        `${currentItem.title}${
+          currentItem.title && currentItem.description ? ": " : ""
+        }${currentItem.description}`.trim()
+      )
+    }
+
+    // Clean up
+    sections.summary = sections.summary.trim()
 
     return sections
   }

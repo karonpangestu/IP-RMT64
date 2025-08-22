@@ -28,17 +28,10 @@ class TranscriptService {
 
       console.log("📝 Raw transcript data:", transcript)
 
-      // Combine all transcript parts into a single text with timestamps
+      // Combine all transcript parts into a single continuous text
       const fullTranscript = transcript
-        .map((part) => {
-          const minutes = Math.floor(part.offset / 60)
-          const seconds = Math.floor(part.offset % 60)
-          const timestamp = `[${minutes}:${seconds
-            .toString()
-            .padStart(2, "0")}]`
-          return `${timestamp} ${this.decodeHtmlEntities(part.text)}`
-        })
-        .join("\n")
+        .map((part) => this.decodeHtmlEntities(part.text))
+        .join(" ")
 
       if (!fullTranscript) {
         throw new Error("No transcript content found")

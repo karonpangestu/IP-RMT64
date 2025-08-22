@@ -65,6 +65,8 @@ function EpisodeDetail() {
   // Debug episode data
   console.log("Episode data:", episode)
   console.log("Loading state:", loading)
+  console.log("Summary data:", episode?.summary)
+  console.log("Episode status:", episode?.status)
 
   if (loading) {
     return (
@@ -195,11 +197,11 @@ function EpisodeDetail() {
       {/* Content Sections */}
       <div className="bg-white rounded-lg shadow p-6">
         {/* Summary */}
-        {activeTab === "Summary" && episode.summary && (
+        {activeTab === "Summary" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Summary</h2>
             <p className="text-gray-700 whitespace-pre-wrap">
-              {episode.summary}
+              {episode.summary || "No summary available"}
             </p>
           </div>
         )}
@@ -208,13 +210,13 @@ function EpisodeDetail() {
         {activeTab === "Business Ideas" && businessIdeas.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Business Ideas</h2>
-            <ul className="list-disc list-inside space-y-2">
+            <div className="space-y-4">
               {businessIdeas.map((idea, index) => (
-                <li key={index} className="text-gray-700">
-                  {idea}
-                </li>
+                <div key={index} className="text-gray-700">
+                  <p className="whitespace-pre-wrap">- {idea}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
@@ -222,13 +224,13 @@ function EpisodeDetail() {
         {activeTab === "Frameworks" && frameworks.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Frameworks</h2>
-            <ul className="list-disc list-inside space-y-2">
+            <div className="space-y-4">
               {frameworks.map((framework, index) => (
-                <li key={index} className="text-gray-700">
-                  {framework}
-                </li>
+                <div key={index} className="text-gray-700">
+                  <p className="whitespace-pre-wrap">- {framework}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
@@ -236,13 +238,13 @@ function EpisodeDetail() {
         {activeTab === "Founder Stories" && founderStories.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Founder Stories</h2>
-            <ul className="list-disc list-inside space-y-2">
+            <div className="space-y-4">
               {founderStories.map((story, index) => (
-                <li key={index} className="text-gray-700">
-                  {story}
-                </li>
+                <div key={index} className="text-gray-700">
+                  <p className="whitespace-pre-wrap">- {story}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>

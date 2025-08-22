@@ -35,7 +35,6 @@ function Navbar() {
 
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
-                <span className="text-gray-700">Welcome, {user.username}</span>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
