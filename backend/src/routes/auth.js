@@ -43,11 +43,11 @@ router.post("/register", async (req, res, next) => {
   }
 })
 
-// Google OAuth login
+// Google Sign-In login
 router.post("/google", async (req, res, next) => {
   try {
-    const { token } = req.body
-    const authData = await AuthService.loginWithGoogle(token)
+    const { credential } = req.body
+    const authData = await AuthService.loginWithGoogle(credential)
     res.json(authData)
   } catch (error) {
     next(error)

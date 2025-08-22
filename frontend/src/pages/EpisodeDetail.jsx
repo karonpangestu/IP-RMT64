@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { format } from "date-fns"
 import LoadingSpinner from "../components/UI/LoadingSpinner"
 import { fetchEpisodeById, deleteEpisode } from "../store/slices/episodesSlice"
+import { updateEpisode } from "../services/episodesAPI"
 
 // Helper function to extract YouTube video ID from URL
 const getYouTubeVideoId = (url) => {
@@ -45,15 +46,36 @@ function EpisodeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { currentEpisode: episode, loading } = useSelector(
-    (state) => state.episodes
-  )
+  const {
+    currentEpisode: episode,
+    loading,
+    error,
+  } = useSelector((state) => state.episodes)
   const { user } = useSelector((state) => state.auth)
   const [activeTab, setActiveTab] = useState("Summary")
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState("")
 
   useEffect(() => {
+    console.log("EpisodeDetail - Fetching episode with ID:", id)
     dispatch(fetchEpisodeById(id))
   }, [dispatch, id])
+
+  useEffect(() => {
+    if (episode) {
+      console.log("EpisodeDetail - Episode loaded:", episode)
+      setEditTitle(episode.title)
+    }
+  }, [episode])
+
+  // Debug logging
+  console.log("EpisodeDetail - Current state:", {
+    id,
+    episode,
+    loading,
+    error,
+    user,
+  })
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this episode?")) {
@@ -62,11 +84,31 @@ function EpisodeDetail() {
     }
   }
 
-  // Debug episode data
-  console.log("Episode data:", episode)
-  console.log("Loading state:", loading)
-  console.log("Summary data:", episode?.summary)
-  console.log("Episode status:", episode?.status)
+  const handleEditClick = () => {
+    setIsEditing(true)
+  }
+
+  const handleSaveEdit = async () => {
+    try {
+      const updatedEpisode = await updateEpisode(episode.id, {
+        title: editTitle,
+      })
+      // Update the episode in the store
+      dispatch({
+        type: "episodes/updateEpisodeInStore",
+        payload: updatedEpisode,
+      })
+      setIsEditing(false)
+    } catch (error) {
+      console.error("Failed to update episode:", error)
+      setEditTitle(episode.title) // Reset on error
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditTitle(episode.title)
+  }
 
   if (loading) {
     return (
@@ -80,6 +122,17 @@ function EpisodeDetail() {
     return (
       <div className="flex justify-center items-center h-64">
         <p className="text-gray-500">Episode not found</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error loading episode:</p>
+          <p className="text-gray-600">{error}</p>
+        </div>
       </div>
     )
   }
@@ -119,8 +172,9 @@ function EpisodeDetail() {
   const frameworks = parseJsonField(episode.frameworks)
   const founderStories = parseJsonField(episode.founderStories)
   const aiAnalysis = episode.aiAnalysis || {}
-  // Only show delete button if user is authenticated and is the owner
-  const isOwner = user?.id === episode?.userId
+
+  // Check ownership - user can edit/delete if they created the episode
+  const isOwner = user && user.id === episode.userId
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -129,7 +183,6 @@ function EpisodeDetail() {
         <div className="aspect-video relative rounded-lg overflow-hidden shadow-lg">
           {episode?.sourceUrl ? (
             <>
-              {console.log("Rendering video for URL:", episode.sourceUrl)}
               <iframe
                 className="w-full h-full absolute inset-0"
                 src={`https://www.youtube.com/embed/${getYouTubeVideoId(
@@ -155,20 +208,54 @@ function EpisodeDetail() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          {episode.title}
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          {isEditing ? (
+            <div className="flex items-center gap-2 flex-1">
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="text-3xl font-bold text-gray-900 border border-gray-300 rounded px-3 py-2 flex-1"
+                autoFocus
+              />
+              <button
+                onClick={handleSaveEdit}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Save
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <h1 className="text-3xl font-bold text-gray-900">
+              {episode.title}
+            </h1>
+          )}
+        </div>
         <div className="flex items-center justify-between">
           <div className="text-gray-600">
             {format(new Date(episode.createdAt), "MMMM d, yyyy")}
           </div>
           {isOwner && (
-            <button
-              onClick={handleDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Delete Episode
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleEditClick}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Edit Title
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete Episode
+              </button>
+            </div>
           )}
         </div>
       </div>

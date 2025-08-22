@@ -36,7 +36,30 @@ const initialState = {
 const episodesSlice = createSlice({
   name: "episodes",
   initialState,
-  reducers: {},
+  reducers: {
+    updateEpisodeInStore: (state, action) => {
+      const index = state.episodes.findIndex(
+        (episode) => episode.id === action.payload.id
+      )
+      if (index !== -1) {
+        state.episodes[index] = action.payload
+      }
+      if (
+        state.currentEpisode &&
+        state.currentEpisode.id === action.payload.id
+      ) {
+        state.currentEpisode = action.payload
+      }
+    },
+    removeEpisodeFromStore: (state, action) => {
+      state.episodes = state.episodes.filter(
+        (episode) => episode.id !== action.payload
+      )
+      if (state.currentEpisode && state.currentEpisode.id === action.payload) {
+        state.currentEpisode = null
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Fetch episodes
@@ -74,5 +97,8 @@ const episodesSlice = createSlice({
       })
   },
 })
+
+export const { updateEpisodeInStore, removeEpisodeFromStore } =
+  episodesSlice.actions
 
 export default episodesSlice.reducer

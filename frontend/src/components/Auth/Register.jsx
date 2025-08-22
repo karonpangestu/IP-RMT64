@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useDispatch } from "react-redux"
 import { useNavigate, Link } from "react-router-dom"
-import { register, signInWithGoogle } from "../../services/authAPI"
+import { register } from "../../services/authAPI"
 import { loginSuccess, loginFailure } from "../../store/slices/authSlice"
 
 function Register() {
@@ -48,17 +48,6 @@ function Register() {
     }
   }
 
-  const handleGoogleRegister = async () => {
-    try {
-      const { token, user } = await signInWithGoogle()
-      dispatch(loginSuccess({ token, user }))
-      navigate("/")
-    } catch (error) {
-      dispatch(loginFailure(error.message))
-      setError("Google sign up failed")
-    }
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -70,7 +59,7 @@ function Register() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
@@ -85,13 +74,12 @@ function Register() {
                 name="username"
                 type="text"
                 required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
                 value={formData.username}
                 onChange={handleChange}
               />
             </div>
-
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -101,13 +89,12 @@ function Register() {
                 name="email"
                 type="email"
                 required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
               />
             </div>
-
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
@@ -117,13 +104,12 @@ function Register() {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
               />
             </div>
-
             <div>
               <label htmlFor="confirmPassword" className="sr-only">
                 Confirm Password
@@ -133,7 +119,7 @@ function Register() {
                 name="confirmPassword"
                 type="password"
                 required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -146,35 +132,10 @@ function Register() {
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Register
+              Sign up
             </button>
           </div>
         </form>
-
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-50 text-gray-500">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        {/* Google OAuth Button */}
-        <button
-          onClick={handleGoogleRegister}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <img
-            src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png"
-            alt="Google"
-            className="w-5 h-5"
-          />
-          <span>Sign up with Google</span>
-        </button>
 
         {/* Login Link */}
         <div className="text-center">

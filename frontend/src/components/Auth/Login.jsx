@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react"
 import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import {
-  initializeGoogleAuth,
-  signInWithGoogle,
-  login,
-} from "../../services/authAPI"
+import { login, loginWithGoogle } from "../../services/authAPI"
 import { loginSuccess, loginFailure } from "../../store/slices/authSlice"
 
 function Login() {
@@ -18,16 +14,54 @@ function Login() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    const loadGoogleAuth = async () => {
-      try {
-        await initializeGoogleAuth()
-      } catch (error) {
-        console.error("Error initializing Google Auth:", error)
+    // Initialize Google Sign-In
+    const initializeGoogleSignIn = () => {
+      if (window.google) {
+        google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+        })
+
+        // Render the Google Sign-In button
+        google.accounts.id.renderButton(
+          document.getElementById("googleSignInButton"),
+          {
+            theme: "outline",
+            size: "large",
+            text: "sign_in_with",
+            shape: "rectangular",
+            logo_alignment: "left",
+          }
+        )
+
+        // Display One Tap prompt
+        google.accounts.id.prompt()
       }
     }
 
-    loadGoogleAuth()
+    // Check if Google script is loaded
+    if (document.readyState === "complete") {
+      initializeGoogleSignIn()
+    } else {
+      window.addEventListener("load", initializeGoogleSignIn)
+    }
+
+    return () => {
+      window.removeEventListener("load", initializeGoogleSignIn)
+    }
   }, [])
+
+  const handleCredentialResponse = async (response) => {
+    try {
+      console.log("Encoded JWT ID token: " + response.credential)
+      const { token, user } = await loginWithGoogle(response.credential)
+      dispatch(loginSuccess({ token, user }))
+      navigate("/")
+    } catch (error) {
+      dispatch(loginFailure(error.message))
+      setError("Google sign in failed")
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -49,17 +83,6 @@ function Login() {
         error.response?.data?.message || "Invalid email or password"
       dispatch(loginFailure(message))
       setError(message)
-    }
-  }
-
-  const handleGoogleLogin = async () => {
-    try {
-      const { token, user } = await signInWithGoogle()
-      dispatch(loginSuccess({ token, user }))
-      navigate("/")
-    } catch (error) {
-      dispatch(loginFailure(error.message))
-      setError("Google sign in failed")
     }
   }
 
@@ -135,18 +158,8 @@ function Login() {
           </div>
         </div>
 
-        {/* Google OAuth Button */}
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <img
-            src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png"
-            alt="Google"
-            className="w-5 h-5"
-          />
-          <span>Sign in with Google</span>
-        </button>
+        {/* Google Sign-In Button */}
+        <div id="googleSignInButton" className="flex justify-center"></div>
       </div>
     </div>
   )

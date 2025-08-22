@@ -1,0 +1,463 @@
+{
+  "info": {
+    "name": "Podcast Summarizer API",
+    "description": "Complete API collection for the Podcast Summarizer application. Includes authentication, episode management, and AI analysis endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "episode_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_email",
+      "value": "test@example.com",
+      "type": "string"
+    },
+    {
+      "key": "user_password",
+      "value": "password123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Creates a new user account. Returns JWT token and user data."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.token);",
+                  "    pm.collectionVariables.set('user_email', pm.request.body.raw.email);",
+                  "    pm.collectionVariables.set('user_password', pm.request.body.raw.password);",
+                  "    console.log('User registered successfully. Token saved.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates user with email and password. Returns JWT token and user data."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.token);",
+                  "    console.log('User logged in successfully. Token saved.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Google Sign-In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credential\": \"your_google_oauth_credential_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/google",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google"]
+            },
+            "description": "Authenticates user with Google OAuth credential. Returns JWT token and user data."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{auth_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify"]
+            },
+            "description": "Verifies the validity of a JWT token. Returns user data if token is valid."
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints for user registration, login, and token verification."
+    },
+    {
+      "name": "Episodes",
+      "item": [
+        {
+          "name": "Get Video Metadata",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/episodes/metadata?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+              "host": ["{{base_url}}"],
+              "path": ["episodes", "metadata"],
+              "query": [
+                {
+                  "key": "url",
+                  "value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                  "description": "YouTube video URL"
+                }
+              ]
+            },
+            "description": "Retrieves metadata for a YouTube video URL. No authentication required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Episodes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/episodes?page=1&search=",
+              "host": ["{{base_url}}"],
+              "path": ["episodes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search term for episode titles (optional)"
+                }
+              ]
+            },
+            "description": "Retrieves paginated list of episodes with optional search functionality. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Episode by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/episodes/{{episode_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["episodes", "{{episode_id}}"]
+            },
+            "description": "Retrieves a specific episode by its ID. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Episode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"How to Build a Successful Startup\",\n  \"sourceUrl\": \"https://www.youtube.com/watch?v=dQw4w9WgXcQ\",\n  \"description\": \"Learn the fundamentals of building a successful startup from industry experts.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/episodes",
+              "host": ["{{base_url}}"],
+              "path": ["episodes"]
+            },
+            "description": "Creates a new episode and processes it with AI analysis. Requires authentication. Episode creation is asynchronous."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('episode_id', response.id);",
+                  "    console.log('Episode created successfully. ID saved:', response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Episode",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Episode Title - How to Build a Successful Startup\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/episodes/{{episode_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["episodes", "{{episode_id}}"]
+            },
+            "description": "Updates an episode's title. Users can only edit their own episodes. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Episode",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/episodes/{{episode_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["episodes", "{{episode_id}}"]
+            },
+            "description": "Deletes an episode. Users can only delete their own episodes. Requires authentication."
+          },
+          "response": []
+        }
+      ],
+      "description": "Episode management endpoints for creating, reading, updating, and deleting episodes."
+    },
+    {
+      "name": "Examples",
+      "item": [
+        {
+          "name": "Search Episodes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/episodes?page=1&search=business",
+              "host": ["{{base_url}}"],
+              "path": ["episodes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "search",
+                  "value": "business"
+                }
+              ]
+            },
+            "description": "Example: Search for episodes containing 'business' in the title."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Second Page",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/episodes?page=2",
+              "host": ["{{base_url}}"],
+              "path": ["episodes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "Example: Get the second page of episodes (pagination)."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Episode with Minimal Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Minimal Episode\",\n  \"sourceUrl\": \"https://www.youtube.com/watch?v=example\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/episodes",
+              "host": ["{{base_url}}"],
+              "path": ["episodes"]
+            },
+            "description": "Example: Create episode with only required fields (title and sourceUrl)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Example requests showing common use cases and parameter combinations."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script to set up common variables",
+          "console.log('Base URL:', pm.collectionVariables.get('base_url'));",
+          "console.log('Auth Token:', pm.collectionVariables.get('auth_token') ? 'Set' : 'Not set');",
+          "console.log('Episode ID:', pm.collectionVariables.get('episode_id') ? pm.collectionVariables.get('episode_id') : 'Not set');"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script for common validations",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON', function () {",
+          "    pm.response.to.have.jsonBody();",
+          "});",
+          "",
+          "// Log response for debugging",
+          "console.log('Response Status:', pm.response.status);",
+          "console.log('Response Time:', pm.response.responseTime + 'ms');"
+        ]
+      }
+    }
+  ]
+}

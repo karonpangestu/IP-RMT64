@@ -27,6 +27,11 @@ const createEpisodeSchema = Joi.object({
   founderStories: Joi.string().allow("", null),
 })
 
+const editEpisodeSchema = Joi.object({
+  title: Joi.string().required().min(3).max(255),
+})
+
 module.exports = {
   createEpisodeSchema,
+  editEpisodeSchema,
 }

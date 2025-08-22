@@ -3,7 +3,11 @@ import { Link } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import EpisodeCard from "../components/Episodes/EpisodeCard"
 import LoadingSpinner from "../components/UI/LoadingSpinner"
-import { fetchEpisodes } from "../store/slices/episodesSlice"
+import {
+  fetchEpisodes,
+  updateEpisodeInStore,
+  removeEpisodeFromStore,
+} from "../store/slices/episodesSlice"
 
 function Home() {
   const dispatch = useDispatch()
@@ -13,6 +17,14 @@ function Home() {
   useEffect(() => {
     dispatch(fetchEpisodes())
   }, [dispatch])
+
+  const handleEpisodeUpdate = (updatedEpisode) => {
+    dispatch(updateEpisodeInStore(updatedEpisode))
+  }
+
+  const handleEpisodeDelete = (episodeId) => {
+    dispatch(removeEpisodeFromStore(episodeId))
+  }
 
   if (loading) {
     return (
@@ -40,7 +52,12 @@ function Home() {
       {/* Episodes Grid */}
       <div className="grid gap-6">
         {episodes.map((episode) => (
-          <EpisodeCard key={episode.id} episode={episode} />
+          <EpisodeCard
+            key={episode.id}
+            episode={episode}
+            onEpisodeUpdate={handleEpisodeUpdate}
+            onEpisodeDelete={handleEpisodeDelete}
+          />
         ))}
       </div>
 

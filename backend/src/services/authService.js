@@ -3,22 +3,19 @@ const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
 const { User } = require("../db")
 
-const client = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-)
+// Create OAuth2Client for Google ID token verification
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 class AuthService {
-  static async verifyGoogleToken(token) {
+  static async verifyGoogleToken(credential) {
     try {
       const ticket = await client.verifyIdToken({
-        idToken: token,
+        idToken: credential,
         audience: process.env.GOOGLE_CLIENT_ID,
       })
       return ticket.getPayload()
     } catch (error) {
-      throw new Error("Invalid Google token")
+      throw new Error("Invalid Google ID token")
     }
   }
 
@@ -72,10 +69,10 @@ class AuthService {
     }
   }
 
-  static async loginWithGoogle(googleToken) {
+  static async loginWithGoogle(credential) {
     try {
-      // Verify Google token
-      const payload = await this.verifyGoogleToken(googleToken)
+      // Verify Google ID token
+      const payload = await this.verifyGoogleToken(credential)
 
       // Find or create user
       const [user] = await User.findOrCreate({

@@ -37,6 +37,11 @@ export const deleteEpisode = async (id) => {
   return response.data
 }
 
+export const updateEpisode = async (id, episodeData) => {
+  const response = await axios.put(`${API_URL}/${id}`, episodeData)
+  return response.data
+}
+
 export const getVideoMetadata = async (url) => {
   const response = await axios.get(
     `${API_URL}/metadata?url=${encodeURIComponent(url)}`

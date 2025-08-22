@@ -4,7 +4,10 @@ const { Op } = require("sequelize")
 const { Podcast } = require("../db")
 const auth = require("../middleware/auth")
 const validate = require("../middleware/validate")
-const { createEpisodeSchema } = require("../validations/episode")
+const {
+  createEpisodeSchema,
+  editEpisodeSchema,
+} = require("../validations/episode")
 const TranscriptService = require("../services/transcriptService")
 const geminiService = require("../services/geminiService")
 
@@ -136,6 +139,41 @@ router.post(
       res.status(201).json(episodeWithUser)
     } catch (error) {
       console.log(error)
+      next(error)
+    }
+  }
+)
+
+// PUT /episodes/:id - Edit an episode (title only)
+router.put(
+  "/:id",
+  auth,
+  validate(editEpisodeSchema),
+  async (req, res, next) => {
+    try {
+      const episode = await Podcast.findByPk(req.params.id)
+
+      if (!episode) {
+        return res.status(404).json({ message: "Episode not found" })
+      }
+
+      // Ensure users can only edit their own episodes
+      if (episode.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" })
+      }
+
+      // Only allow editing the title
+      await episode.update({
+        title: req.body.title,
+      })
+
+      // Fetch the updated episode with user data
+      const updatedEpisode = await Podcast.findByPk(episode.id, {
+        include: ["user"],
+      })
+
+      res.json(updatedEpisode)
+    } catch (error) {
       next(error)
     }
   }
