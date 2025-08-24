@@ -9,6 +9,17 @@ router.post("/register", async (req, res, next) => {
   try {
     const { username, email, password } = req.body
 
+    // Validate input
+    if (!username || username.trim() === "") {
+      return res.status(400).json({ message: "Username is required" })
+    }
+    if (!email || email.trim() === "") {
+      return res.status(400).json({ message: "Email is required" })
+    }
+    if (!password || password.trim() === "") {
+      return res.status(400).json({ message: "Password is required" })
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } })
     if (existingUser) {
@@ -58,6 +69,14 @@ router.post("/google", async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body
+
+    // Validate input
+    if (!email || email.trim() === "") {
+      return res.status(400).json({ message: "Email is required" })
+    }
+    if (!password || password.trim() === "") {
+      return res.status(400).json({ message: "Password is required" })
+    }
 
     // Find user
     const user = await User.findOne({ where: { email } })

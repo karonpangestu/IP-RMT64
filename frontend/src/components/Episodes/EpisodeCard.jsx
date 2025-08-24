@@ -31,6 +31,9 @@ function EpisodeCard({ episode, onEpisodeUpdate, onEpisodeDelete }) {
   // Check ownership - user can edit/delete if they created the episode
   const isOwner = user && user.id === episode.userId
 
+  // Only show buttons if user is the owner
+  const shouldShowButtons = isOwner
+
   const handleVideoClick = (e) => {
     e.preventDefault()
     setIsPlaying(true)
@@ -157,7 +160,7 @@ function EpisodeCard({ episode, onEpisodeUpdate, onEpisodeDelete }) {
                     {episode.title}
                   </h2>
                 </Link>
-                {isOwner && (
+                {shouldShowButtons && (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleEditClick}

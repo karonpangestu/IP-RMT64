@@ -12,6 +12,9 @@ module.exports = (sequelize) => {
       username: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
       },
       email: {
         type: DataTypes.STRING,
@@ -19,11 +22,15 @@ module.exports = (sequelize) => {
         unique: true,
         validate: {
           isEmail: true,
+          notEmpty: true,
         },
       },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
       },
       role: {
         type: DataTypes.ENUM("user", "admin"),

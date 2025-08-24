@@ -7,6 +7,9 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
     "seed": "node src/scripts/seedTestData.js"
   },
   "dependencies": {
